@@ -576,6 +576,8 @@ let newsCache=DEF_NEWS, projectsCache=DEF_PROJECTS, adsCache=[];
 const fmtDate=s=>{try{return new Date(s).toLocaleDateString('pt-PT',{day:'2-digit',month:'long',year:'numeric'});}catch{return s||'';}};
 const formatarPreco=preco=>preco!==null&&preco!==undefined&&preco!==''&&Number.isFinite(Number(preco))?`${Number(preco).toLocaleString('pt-PT')} Kz`:'Preço sob consulta';
 const formatarDisponibilidade=quantidade=>Number(quantidade)>0?`${quantidade} unidades disponíveis`:'Indisponível';
+const PLACEHOLDER_PRODUTO='https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=1200&q=80';
+const obterImagemProduto=img=>typeof img==='string'&&img.trim()!==''?img.trim():PLACEHOLDER_PRODUTO;
 
 async function carregarDados(){
   try{
@@ -623,12 +625,14 @@ const catLabel={agua:'Água Purificada',filtros:'Filtros de Água',acessorios:'A
 function renderProjects(){
   const projs=projectsCache;
   const grid=document.getElementById('projectsGrid');
-  grid.innerHTML=projs.slice(0,3).map((p,i)=>`
+  grid.innerHTML=projs.slice(0,3).map((p,i)=>{
+    const image=obterImagemProduto(p.img);
+    return `
     <div class="project-card reveal" style="transition-delay:${i*.1}s"
-      data-category="${p.categoria}" data-title="${p.titulo}" data-image="${p.img}"
+      data-category="${p.categoria}" data-title="${p.titulo}" data-image="${image}"
       data-quantidade="${p.quantidade}" data-preco="${p.preco ?? ''}" data-description="${p.desc}">
       <div class="card-img">
-        <img src="${p.img}" alt="${p.titulo}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=60'">
+        <img src="${image}" alt="${p.titulo}" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_PRODUTO}'">
         <div class="card-img-overlay"></div>
         <span class="card-badge">${catLabel[p.categoria]||p.categoria}</span>
         <button class="card-expand" aria-label="Ver projeto"><i class="fa-solid fa-expand"></i></button>
@@ -637,7 +641,8 @@ function renderProjects(){
         <div class="card-meta"><h3 class="card-title">${p.titulo}</h3></div>
         <p class="card-location"><i class="fa-solid fa-tag"></i> ${formatarPreco(p.preco)}</p>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   grid.querySelectorAll('.project-card').forEach(c=>{
     c.addEventListener('click',()=>openModal(c));
     ro.observe(c);
@@ -653,7 +658,9 @@ document.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('clic
 // ── MODAL PROJETO ────────────────────────────────────
 const modal=document.getElementById('projectModal');
 function openModal(c){
-  document.getElementById('modalImage').src=c.dataset.image||'';
+  const modalImage=document.getElementById('modalImage');
+  modalImage.onerror=()=>{modalImage.onerror=null;modalImage.src=PLACEHOLDER_PRODUTO;};
+  modalImage.src=obterImagemProduto(c.dataset.image);
   document.getElementById('modalTitle').textContent=c.dataset.title||'';
   document.getElementById('modalDescription').textContent=c.dataset.description||'';
   document.getElementById('modalQuantidade').textContent=formatarDisponibilidade(c.dataset.quantidade);

@@ -227,6 +227,8 @@ const DEF=[
 const catLabel={agua:'Água Purificada',filtros:'Filtros de Água',acessorios:'Acessórios'};
 const formatarPreco=preco=>preco!==null&&preco!==undefined&&preco!==''&&Number.isFinite(Number(preco))?`${Number(preco).toLocaleString('pt-PT')} Kz`:'Preço sob consulta';
 const formatarDisponibilidade=quantidade=>Number(quantidade)>0?`${quantidade} unidades disponíveis`:'Indisponível';
+const PLACEHOLDER_PRODUTO='https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=1200&q=80';
+const obterImagemProduto=img=>typeof img==='string'&&img.trim()!==''?img.trim():PLACEHOLDER_PRODUTO;
 
 // ── CACHE EM MEMÓRIA (preenchida a partir do Supabase) ──
 let projectsCache=DEF;
@@ -271,18 +273,21 @@ function renderProjects(filter){
     return;
   }
 
-  grid.innerHTML=filtered.map((p,i)=>`
+  grid.innerHTML=filtered.map((p,i)=>{
+    const image=obterImagemProduto(p.img);
+    return `
     <div class="pc rv" style="transition-delay:${(i%3)*.08}s" data-id="${p.id}">
       <div class="ciw">
         <span class="cbg">${catLabel[p.categoria]||p.categoria}</span>
-        <img src="${p.img}" alt="${p.titulo}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=60'">
+        <img src="${image}" alt="${p.titulo}" loading="lazy" onerror="this.onerror=null;this.src='${PLACEHOLDER_PRODUTO}'">
         <div class="cov"><span><i class="fa-solid fa-expand" style="font-size:.8rem"></i> Ver Detalhes</span></div>
       </div>
       <div class="cb">
         <div class="cm2"><h3 class="ctt">${p.titulo}</h3></div>
         <p class="cloc"><i class="fa-solid fa-tag"></i> ${formatarPreco(p.preco)}</p>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   grid.querySelectorAll('.pc').forEach(c=>c.addEventListener('click',()=>openModal(c.dataset.id)));
   document.querySelectorAll('.rv:not(.in)').forEach(el=>rObs.observe(el));
@@ -298,7 +303,9 @@ const md=document.getElementById('md');
 function openModal(id){
   const p=load().find(x=>String(x.id)===String(id));
   if(!p)return;
-  document.getElementById('mImg').src=p.img||'';
+  const modalImage=document.getElementById('mImg');
+  modalImage.onerror=()=>{modalImage.onerror=null;modalImage.src=PLACEHOLDER_PRODUTO;};
+  modalImage.src=obterImagemProduto(p.img);
   document.getElementById('mti').textContent=p.titulo;
   document.getElementById('mde').textContent=p.desc;
   document.getElementById('mv1').textContent=formatarDisponibilidade(p.quantidade);
