@@ -57,9 +57,10 @@ const EufraAuth = {
   async updateEmail(newEmail) {
     return sbClient.auth.updateUser({ email: newEmail });
   },
-  async sendPasswordReset(email, redirectTo) {
-    return sbClient.auth.resetPasswordForEmail(email, { redirectTo });
-  },
+async sendPasswordReset(email) { 
+   const redirectTo = `${window.location.origin}/gestores/`; 
+   return sbClient.auth.resetPasswordForEmail(email, { redirectTo }); 
+},
   onAuthStateChange(cb) {
     sbClient.auth.onAuthStateChange((event, session) => cb(event, session));
   }
